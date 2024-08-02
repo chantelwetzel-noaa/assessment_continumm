@@ -35,18 +35,18 @@ library(here)
 library(r4ss)
 library(dplyr)
 library(tidyr)
-source(here::here("get_samples.R"))
+source(here::here("R", "get_samples.R"))
 
 # Set up:
 nsims <- 1
 # n is the number of samples to create for lengths and ages
 n <- 1000
 # the number of model years to sample length and age data for
-n_years <- 50
+n_years <- 100
 # default sigmaR to generate annual recruitment deviations
 sigma_r <- 0.70
 species <- "dhufish" 
-error <- "deterministic"
+error <- "stochastic"
 
 for (ii in 1:nsims) {
   
@@ -136,18 +136,20 @@ for (ii in 1:nsims) {
     dplyr::mutate(
       fleet = data$lencomp$FltSvy
     )
-
+  data_years <- min(unique(data$lencomp$Yr)):max(unique(data$lencomp$Yr)) 
+  
+  print("sampling lengths")
   fleet1 <- get_samples(
-      data = prop_lengths[prop_lengths$fleet == 1, ], 
-      years = 1:n_years,
+      data = prop_lengths[prop_lengths$fleet == 1, -ncol(prop_lengths)], 
+      years = data_years,
       sample_size = n, 
       data_type = c("length_cm", "age_years")[1]
   )
   fleet1$fleet <- 1
 
   fleet2 <- get_samples(
-    data = prop_lengths[prop_lengths$fleet == 2, ], 
-    years = 1:n_years,
+    data = prop_lengths[prop_lengths$fleet == 2, -ncol(prop_lengths)], 
+    years = data_years,
     sample_size = n, 
     data_type = c("length_cm", "age_years")[1]
   )
@@ -163,18 +165,20 @@ for (ii in 1:nsims) {
     dplyr::mutate(
       fleet = data$agecomp$FltSvy
     )
+  data_years <- min(unique(data$agecomp$Yr)):max(unique(data$agecomp$Yr))
   
+  print("sampling ages")
   fleet1 <- get_samples(
-    data = prop_ages[prop_ages$fleet == 1, ], 
-    years = 1:1:n_years,
+    data = prop_ages[prop_ages$fleet == 1, -ncol(prop_ages)], 
+    years = data_years,
     sample_size = n, 
     data_type = c("length_cm", "age_years")[2]
   )
   fleet1$fleet <- 1
 
   fleet2 <- get_samples(
-    data = prop_ages[prop_ages$fleet == 2, ], 
-    years = 1:1:n_years,
+    data = prop_ages[prop_ages$fleet == 2, -ncol(prop_ages)], 
+    years = data_years,
     sample_size = n, 
     data_type = c("length_cm", "age_years")[2]
   )
@@ -191,6 +195,6 @@ for (ii in 1:nsims) {
     list_of_files <- list.files()
     file.copy(from = list_of_files, to = new_folder)
   } else {
-    stop()
+    stop("Deterministic population")
   }
 }
